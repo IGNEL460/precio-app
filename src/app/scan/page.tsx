@@ -79,11 +79,16 @@ export default function ScanPage() {
         formData.append("file", file);
 
         try {
-            // Simula el procesamiento del ticket enviándolo a la IA real en background
-            await fetch("/api/ocr", {
+            // Sube el ticket al servidor para que entre a la cola de moderación ("Carpeta 1")
+            const response = await fetch("/api/tickets/upload", {
                 method: "POST",
                 body: formData,
             });
+
+            if (!response.ok) {
+                const errJson = await response.json();
+                console.error("Error al subir:", errJson);
+            }
 
             // Sin importar el resultado del JSON, llevamos al usuario a la pantalla de éxito
             setStep("success");

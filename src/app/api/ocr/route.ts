@@ -11,15 +11,34 @@ export async function POST(req: NextRequest) {
             }, { status: 500 });
         }
 
-        const formData = await req.formData();
-        const file = formData.get("file") as File;
+        let base64Image = "";
+        let mimeType = "image/jpeg";
 
-        if (!file) {
-            return NextResponse.json({ error: "No se subió ningún archivo" }, { status: 400 });
+        // Intentar leer como JSON primero, por si mandan la URL (desde el Admin)
+        if (req.headers.get("content-type")?.includes("application/json")) {
+            const body = await req.json();
+            if (body.image_url) {
+                const imgRes = await fetch(body.image_url);
+                if (!imgRes.ok) throw new Error("No se pudo descargar la imagen para el OCR");
+                const arrayBuf = await imgRes.arrayBuffer();
+                base64Image = Buffer.from(arrayBuf).toString("base64");
+                mimeType = imgRes.headers.get("content-type") || "image/jpeg";
+            } else {
+                return NextResponse.json({ error: "No se proporcionó image_url" }, { status: 400 });
+            }
+        } else {
+            // Leer como FormData (desde la App móvil si quieren probar directo)
+            const formData = await req.formData();
+            const file = formData.get("file") as File;
+
+            if (!file) {
+                return NextResponse.json({ error: "No se subió ningún archivo" }, { status: 400 });
+            }
+
+            const bytes = await file.arrayBuffer();
+            base64Image = Buffer.from(bytes).toString("base64");
+            mimeType = file.type;
         }
-
-        const bytes = await file.arrayBuffer();
-        const base64Image = Buffer.from(bytes).toString("base64");
 
         // Inicializar Gemini
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -49,7 +68,7 @@ Reglas:
             {
                 inlineData: {
                     data: base64Image,
-                    mimeType: file.type
+                    mimeType: mimeType
                 }
             }
         ]);

@@ -26,6 +26,8 @@ export default function ValidatorPage() {
     const [validationStep, setValidationStep] = useState<1 | 2 | 3>(1);
     const [adminLocation, setAdminLocation] = useState<{ lat: number, lng: number } | null>(null);
 
+    const [currentTicketId, setCurrentTicketId] = useState<string | null>(null);
+
     // Auto calcular total
     const currentTotal = ocrData?.items.reduce((acc, item) => acc + (Number(item.price) || 0), 0) || 0;
 
@@ -39,35 +41,43 @@ export default function ValidatorPage() {
         }
     }, []);
 
-    const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Preview
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-
+    const fetchRandomTicket = async () => {
         setLoading(true);
         setOcrData(null);
         setValidationStep(1);
+        setCurrentTicketId(null);
+        setImagePreview(null);
 
-        const formData = new FormData();
-        formData.append("file", file);
+        try {
+            const res = await fetch("/api/tickets/random");
+            const data = await res.json();
+            if (data.ticket) {
+                setImagePreview(data.ticket.public_url);
+                setCurrentTicketId(data.ticket.id);
+            } else {
+                alert("No hay tickets nuevos para moderar 🥳");
+            }
+        } catch (err) {
+            console.error("Error trayendo ticket aleatorio:", err);
+            alert("Hubo un error al buscar tickets.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRunOcr = async () => {
+        if (!imagePreview) return;
+        setLoading(true);
 
         try {
             const response = await fetch("/api/ocr", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image_url: imagePreview }),
             });
 
             const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Error desconocido al procesar con IA");
-            }
+            if (!response.ok) throw new Error(data.error || "Error desconocido al procesar con IA");
 
             setOcrData(data);
         } catch (err: any) {
@@ -104,10 +114,19 @@ export default function ValidatorPage() {
             });
 
             if (response.ok) {
-                alert("¡Ticket validado y guardado correctamente!");
-                setOcrData(null);
-                setValidationStep(1);
-                setImagePreview("/receipt-demo.png");
+                // Si hay un ticket actual, lo pasamos a la siguiente carpeta (pending_collaboration)
+                if (currentTicketId) {
+                    await fetch("/api/tickets/moderate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ticket_id: currentTicketId, action: 'approve' })
+                    });
+                }
+
+                alert("¡Ticket validado! Pasando a la siguiente carpeta...");
+
+                // Traer el siguiente automáticamente
+                fetchRandomTicket();
             }
         } catch (err) {
             alert("Error al guardar los datos");
@@ -124,16 +143,29 @@ export default function ValidatorPage() {
                     <h1 style={{ marginTop: '8px' }}>Validador de Tickets (Cloud AI)</h1>
                 </div>
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        id="ticket-upload"
-                        style={{ display: 'none' }}
-                    />
-                    <label htmlFor="ticket-upload" className={styles.approveBtn} style={{ background: 'var(--accent-secondary)', cursor: 'pointer' }}>
-                        {loading ? "Procesando..." : "Subir Nuevo Ticket"}
-                    </label>
+                    <button
+                        onClick={fetchRandomTicket}
+                        className={styles.approveBtn}
+                        style={{ background: 'var(--accent-secondary)', cursor: 'pointer' }}
+                        disabled={loading}
+                    >
+                        {loading ? "Buscando..." : "Traer Siguiente Ticket"}
+                    </button>
+                    {currentTicketId && (
+                        <button
+                            onClick={() => {
+                                // Opción rápida para rechazar/borrar tickets ilegibles
+                                fetch("/api/tickets/moderate", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ ticket_id: currentTicketId, action: "reject" })
+                                }).then(() => fetchRandomTicket());
+                            }}
+                            className={styles.rejectBtn}
+                        >
+                            Desechar Ticket
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -150,13 +182,24 @@ export default function ValidatorPage() {
                     </h2>
                     <div className={styles.imageContainer}>
                         {imagePreview && (
-                            <Image
-                                src={imagePreview}
-                                alt="Ticket original"
-                                fill
-                                className={styles.mockImage}
-                                style={{ padding: '20px', objectFit: 'contain' }}
-                            />
+                            <>
+                                <Image
+                                    src={imagePreview}
+                                    alt="Ticket original"
+                                    fill
+                                    className={styles.mockImage}
+                                    style={{ padding: '20px', objectFit: 'contain' }}
+                                />
+                                {!ocrData && !loading && (
+                                    <button
+                                        onClick={handleRunOcr}
+                                        className={styles.approveBtn}
+                                        style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', boxShadow: '0 4px 15px rgba(0,0,0,0.5)' }}
+                                    >
+                                        🧠 Procesar con IA
+                                    </button>
+                                )}
+                            </>
                         )}
                         {loading && (
                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -179,7 +222,7 @@ export default function ValidatorPage() {
                     <div className={`${styles.formCard} glass`}>
                         {!ocrData && !loading ? (
                             <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                Sube un ticket para comenzar la validación con la Inteligencia Artificial en la nube.
+                                Haz clic en "Traer Siguiente Ticket" o "Procesar con IA" para comenzar.
                             </p>
                         ) : (
                             <>
