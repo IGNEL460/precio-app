@@ -4,6 +4,7 @@ import SearchHeader from "@/components/SearchHeader";
 import styles from "./page.module.css";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import ShareTicketButton from "@/components/ShareTicketButton";
 
 type PriceResult = {
   price_id: string;
@@ -174,6 +175,11 @@ export default function Home() {
                   Subir foto del Ticket (Validar OCR)
                 </button>
               </Link>
+
+              {/* Botón de Pruebas: Compartir Web Share API */}
+              <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                <ShareTicketButton ticketUrl="https://preciomauro.loca.lt" storeName="Mi Tienda Local" />
+              </div>
             </div>
 
             <div className={styles.grid}>
