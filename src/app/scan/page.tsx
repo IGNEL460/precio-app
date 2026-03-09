@@ -24,7 +24,8 @@ export default function ScanPage() {
     const startCamera = async () => {
         try {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error("La API de la cámara no está disponible. ¿Estás navegando con HTTPS o en localhost?");
+                console.warn("La API de la cámara no está disponible (Probablemente por falta de HTTPS).");
+                return; // Fallback silencioso, permite usar el botón de galería
             }
 
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -36,7 +37,7 @@ export default function ScanPage() {
             }
         } catch (err: any) {
             console.warn("No se pudo acceder a la cámara, o no tienes permisos", err);
-            alert("No se pudo iniciar la cámara: " + (err.message || "Permisos denegados u origen no seguro"));
+            // Fallback silencioso
         }
     };
 
