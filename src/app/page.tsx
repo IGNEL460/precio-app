@@ -121,7 +121,7 @@ export default function Home() {
                   <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.95rem' }}>
                     ¿Conseguiste un precio diferente o fuiste a otra sucursal hoy?
                   </p>
-                  <Link href="/admin/validator">
+                  <Link href="/scan">
                     <button
                       style={{
                         background: 'transparent',
@@ -143,7 +143,7 @@ export default function Home() {
                         <path d="M12 20h9"></path>
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                       </svg>
-                      Reportar nuevo precio de "{query}"
+                      Escanear ticket para "{query}"
                     </button>
                   </Link>
                 </div>
@@ -165,14 +165,14 @@ export default function Home() {
                 Nuestra Inteligencia Artificial lo leerá en la nube y formará parte de nuestro índice global de economía civil.
               </p>
 
-              <Link href="/admin/validator">
+              <Link href="/scan">
                 <button className={styles.uploadBtn}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                   </svg>
-                  Subir foto del Ticket (Validar OCR)
+                  Escanear Ticket Inteligente
                 </button>
               </Link>
 
