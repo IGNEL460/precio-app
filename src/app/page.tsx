@@ -48,9 +48,9 @@ export default function Home() {
   const handleSearch = async (searchTerm: string) => {
     setLoading(true);
 
-    // Si no hay GPS disponible, buscamos en el Obelisco, BA (Placeholder)
-    const lat = userLocation?.lat || -34.6037;
-    const lng = userLocation?.lng || -58.3816;
+    // Si no hay GPS disponible, buscamos en Corrientes (Placeholder)
+    const lat = userLocation?.lat || -27.4692;
+    const lng = userLocation?.lng || -58.8306;
 
     try {
       const res = await fetch(`/api/prices?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lng=${lng}&radius=5000`);

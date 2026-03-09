@@ -84,8 +84,8 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q") || "";
-        const lat = parseFloat(searchParams.get("lat") || "-34.6037"); // Default BA
-        const lng = parseFloat(searchParams.get("lng") || "-58.3816");
+        const lat = parseFloat(searchParams.get("lat") || "-27.4692"); // Default Corrientes
+        const lng = parseFloat(searchParams.get("lng") || "-58.8306");
         const radius = parseFloat(searchParams.get("radius") || "5000"); // 5km de radio predeterminado
 
         if (!q) {
