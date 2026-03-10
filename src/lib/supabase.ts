@@ -22,3 +22,5 @@ export type PriceEntry = {
     status: 'pending' | 'approved' | 'rejected';
     image_url?: string;
 };
+
+// Trigger Vercel Build
