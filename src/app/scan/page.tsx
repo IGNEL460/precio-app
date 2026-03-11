@@ -56,7 +56,7 @@ export default function ScanPage() {
                 const img = new window.Image();
                 img.src = event.target?.result as string;
                 img.onload = () => {
-                    const MAX_WIDTH = 1200; // Limitar ancho a 1200px para OCR para evitar limites de Vercel/Next
+                    const MAX_WIDTH = 2000; // Aumentar resolución (Sigue estando bajo el límite de Vercel de 4.5MB)
                     const scaleSize = MAX_WIDTH / img.width;
                     const width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
                     const height = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
@@ -73,7 +73,7 @@ export default function ScanPage() {
                             } else {
                                 resolve(file);
                             }
-                        }, "image/jpeg", 0.7); // 70% calidad
+                        }, "image/jpeg", 0.85); // 85% calidad para textos más nítidos
                     } else {
                         resolve(file);
                     }
