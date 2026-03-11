@@ -94,13 +94,17 @@ export default function ScanPage() {
             if (!response.ok) {
                 const errJson = await response.json();
                 console.error("Error al subir:", errJson);
+                alert("Error al subir el ticket: " + (errJson.error || "Desconocido"));
+                setStep("camera");
+                return;
             }
 
-            // Sin importar el resultado del JSON, llevamos al usuario a la pantalla de éxito
+            // Si fue exitoso, vamos a la pantalla de éxito
             setStep("success");
-        } catch (error) {
-            // Si falla la red, también mostramos la pantalla para no frustrar la acción cívica
-            setStep("success");
+        } catch (error: any) {
+            console.error("Error de red al subir:", error);
+            alert("Error de conexión al subir el ticket. Revisa tu internet o la IP del servidor.");
+            setStep("camera");
         }
     };
 

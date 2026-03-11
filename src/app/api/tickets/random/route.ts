@@ -11,11 +11,9 @@ export async function GET(req: NextRequest) {
             .from('ticket_images')
             .select('*')
             .eq('status', 'pending_moderation')
-            .order('random' as any, { ascending: true }) // un hack si no hay función aleatoria nativa de supabase, pero mejor usamos límite y rpc o limit 1 si usamos order random.
-            // Para PostgreSQL estándar, order by random() no es directamente soportado en SDK si no se crea un RPC, pero podemos traer varios y elegir uno en el backend a menos que haya muchos.
             // Alternativa: traer los 50 más antiguos y elegir 1 aleatorio en JS
             .order('created_at', { ascending: true })
-            .limit(20);
+            .limit(50);
 
         if (error) {
             throw new Error(error.message);
