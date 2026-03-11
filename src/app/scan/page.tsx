@@ -29,7 +29,11 @@ export default function ScanPage() {
             }
 
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" } // Prioriza la cámara trasera
+                video: { 
+                    facingMode: "environment", // Prioriza la cámara trasera
+                    width: { ideal: 4096 }, // Forzar resolución 4K/Máxima permitida por el dispositivo
+                    height: { ideal: 2160 }
+                } 
             });
             streamRef.current = stream;
             if (videoRef.current) {
