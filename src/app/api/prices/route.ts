@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
     try {
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         const locationWKT = `POINT(${lng} ${lat})`;
 
         // Buscar primero el supermercado si ya existe
-        let { data: storeData, error: storeError } = await supabase
+        let { data: storeData, error: storeError } = await supabaseAdmin
             .from("establishments")
             .select("id")
             .eq("name", establishment)
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
         if (!storeId || storeError) {
             // Si no existe, lo creamos
-            const { data: newStore, error: createStoreError } = await supabase
+            const { data: newStore, error: createStoreError } = await supabaseAdmin
                 .from("establishments")
                 .insert({
                     name: establishment,
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         // 2. Iterar sobre cada ítem y guardar Producto + Precio
         for (const item of items) {
             // Producto (diccionario)
-            let { data: productData } = await supabase
+            let { data: productData } = await supabaseAdmin
                 .from("products")
                 .select("id")
                 .eq("name", item.name)
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
             let productId = productData?.id;
 
             if (!productId) {
-                const { data: newProduct, error: createProdError } = await supabase
+                const { data: newProduct, error: createProdError } = await supabaseAdmin
                     .from("products")
                     .insert({ name: item.name, category: "General" })
                     .select("id")
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
             }
 
             // Historial de Precios
-            const { error: priceError } = await supabase
+            const { error: priceError } = await supabaseAdmin
                 .from("prices")
                 .insert({
                     product_id: productId,
@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Llamada a la función PostgreSQL (PostGIS) optimizada para GPS
-        const { data, error } = await supabase.rpc("search_nearby_prices", {
+        const { data, error } = await supabaseAdmin.rpc("search_nearby_prices", {
             search_term: q,
             user_lat: lat,
             user_lng: lng,

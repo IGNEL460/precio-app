@@ -113,23 +113,30 @@ export default function ValidatorPage() {
                 }),
             });
 
-            if (response.ok) {
-                // Si hay un ticket actual, lo pasamos a la siguiente carpeta (pending_collaboration)
-                if (currentTicketId) {
-                    await fetch("/api/tickets/moderate", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ ticket_id: currentTicketId, action: 'approve' })
-                    });
-                }
-
-                alert("¡Ticket validado! Pasando a la siguiente carpeta...");
-
-                // Traer el siguiente automáticamente
-                fetchRandomTicket();
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error del servidor al guardar:", errorData);
+                alert("Hubo un error al guardar en la base de datos: " + (errorData.error || "Desconocido"));
+                return;
             }
-        } catch (err) {
-            alert("Error al guardar los datos");
+
+            // Si hay un ticket actual, lo pasamos a la siguiente carpeta (pending_collaboration)
+            if (currentTicketId) {
+                await fetch("/api/tickets/moderate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ticket_id: currentTicketId, action: 'approve' })
+                });
+            }
+
+            alert("¡Ticket validado! Pasando a la siguiente carpeta...");
+
+            // Traer el siguiente automáticamente
+            fetchRandomTicket();
+
+        } catch (err: any) {
+            console.error("Error de conexión al guardar:", err);
+            alert("Error de red al guardar los datos: " + err.message);
         } finally {
             setLoading(false);
         }

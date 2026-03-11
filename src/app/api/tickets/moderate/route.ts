@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
     try {
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
         // Action puede ser 'approve' (va a pending_collaboration) o 'reject' (va a archived directo o borrado)
         const newStatus = action === 'reject' ? 'archived' : 'pending_collaboration';
 
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
             .from('ticket_images')
             .update({ status: newStatus, updated_at: new Date().toISOString() })
             .eq('id', ticket_id);
@@ -39,7 +39,7 @@ async function cleanupOldTickets() {
     // Este script sencillo simplemente borrará los tickets 'archived' si superan un número (ej. 500)
     const MAX_ARCHIVED = 500;
 
-    const { count } = await supabase
+    const { count } = await supabaseAdmin
         .from('ticket_images')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'archived');
@@ -48,7 +48,7 @@ async function cleanupOldTickets() {
         const toDeleteCount = count - MAX_ARCHIVED;
 
         // Obtener los IDs y paths de los más antiguos para borrar
-        const { data: oldestTickets } = await supabase
+        const { data: oldestTickets } = await supabaseAdmin
             .from('ticket_images')
             .select('id, storage_path')
             .eq('status', 'archived')
@@ -56,14 +56,14 @@ async function cleanupOldTickets() {
             .limit(toDeleteCount);
 
         if (oldestTickets && oldestTickets.length > 0) {
-            const idsToDelete = oldestTickets.map(t => t.id);
-            const pathsToDelete = oldestTickets.map(t => t.storage_path);
+            const idsToDelete = oldestTickets.map((t: any) => t.id);
+            const pathsToDelete = oldestTickets.map((t: any) => t.storage_path);
 
             // Borrar de Storage
-            await supabase.storage.from('tickets').remove(pathsToDelete);
+            await supabaseAdmin.storage.from('tickets').remove(pathsToDelete);
 
             // Borrar de BD
-            await supabase.from('ticket_images').delete().in('id', idsToDelete);
+            await supabaseAdmin.from('ticket_images').delete().in('id', idsToDelete);
 
             console.log(`Cleaned up ${oldestTickets.length} old archived tickets.`);
         }
