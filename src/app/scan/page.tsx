@@ -48,33 +48,72 @@ export default function ScanPage() {
         }
     };
 
+    const compressImage = (file: File): Promise<File> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new window.Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const MAX_WIDTH = 1200; // Limitar ancho a 1200px para OCR para evitar limites de Vercel/Next
+                    const scaleSize = MAX_WIDTH / img.width;
+                    const width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
+                    const height = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                resolve(new File([blob], file.name, { type: "image/jpeg" }));
+                            } else {
+                                resolve(file);
+                            }
+                        }, "image/jpeg", 0.7); // 70% calidad
+                    } else {
+                        resolve(file);
+                    }
+                };
+                img.onerror = () => resolve(file);
+            };
+            reader.onerror = () => resolve(file);
+        });
+    };
+
     const capturePhoto = () => {
         if (!videoRef.current || !canvasRef.current) return;
         const canvas = canvasRef.current;
         const video = videoRef.current;
 
-        // Configurar canvas para capturar la resolución original
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext("2d");
 
         if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
+            canvas.toBlob(async (blob) => {
                 if (blob) {
-                    const file = new File([blob], "ticket_scan.jpg", { type: "image/jpeg" });
+                    const originalFile = new File([blob], "ticket_scan.jpg", { type: "image/jpeg" });
                     setPreviewImage(URL.createObjectURL(blob));
-                    uploadTicket(file);
+                    setStep("uploading");
+                    const compressed = await compressImage(originalFile);
+                    uploadTicket(compressed);
                 }
-            }, "image/jpeg", 0.85);
+            }, "image/jpeg", 0.9);
         }
     };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             setPreviewImage(URL.createObjectURL(file));
-            uploadTicket(file);
+            setStep("uploading");
+            const compressed = await compressImage(file);
+            uploadTicket(compressed);
         }
     };
 
