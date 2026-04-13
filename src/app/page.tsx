@@ -176,14 +176,16 @@ export default function Home() {
             <button className="btn-yerba" onClick={handleSearch} style={{ height: '52px' }}>Buscar</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px', textAlign: 'left' }}>
-            {listings.length === 0 && budget === "" && (
+            {/* Ejemplo Demo: SOLO aparece si el usuario busca y el presupuesto es suficiente */}
+            {(budget !== "" && budget >= 350000 && listings.length === 0) && (
                <div className="card-home animate-slide-up" style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', top: '15px', right: '15px', background: 'var(--accent-earth)', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold', zIndex: 1 }}>DEMO</div>
                   <div style={{ height: '220px', backgroundColor: '#E2E8CE', borderRadius: '16px', marginBottom: '16px', overflow: 'hidden' }}>
                     <img src="/departamento_corrientes_demo_2_1776060101051.png" alt="Demo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
-                  <h3>Dpto. Vista al Paraná</h3>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+                  <h3 style={{ fontSize: '1.3rem', marginBottom: '8px' }}>Dpto. Vista al Paraná</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '16px' }}>Excelente ubicación, 2 dormitorios, balcón corrido y cochera.</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
                     <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-earth)' }}>$350.000</span>
                     <button className="btn-yerba" onClick={handleInterest}>Me interesa</button>
                   </div>
