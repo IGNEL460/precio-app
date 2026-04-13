@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "cleanUrls": true,
+  "regions": ["gru1"],
+  "git": {
+    "deploymentStrategy": "auto"
+  }
+}
