@@ -14,20 +14,16 @@ export default function OnboardingModal({ onComplete }: OnboardingProps) {
   const handleSave = async () => {
     if (!budget) return;
     setLoading(true);
-    
+    const numBudget = Number(budget);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ max_budget: budget })
-      .eq("id", user.id);
-
-    if (!error) {
-      onComplete(Number(budget));
-    } else {
-      console.error(error);
+    if (user) {
+      await supabase
+        .from("profiles")
+        .update({ max_budget: numBudget })
+        .eq("id", user.id);
     }
+
+    onComplete(numBudget);
     setLoading(false);
   };
 
