@@ -100,9 +100,34 @@ export default function Home() {
     setView("choice");
   };
 
-  const handleInterest = () => {
-    if (!user) setShowAuth(true);
-    else alert("¡Interés registrado! El dueño recibirá una notificación.");
+  const handleInterest = async (listingId: string) => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("interests")
+        .insert({
+          tenant_id: user.id,
+          listing_id: listingId,
+          status: 'pending'
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          alert("Ya mostraste interés por esta propiedad. El dueño ya tiene tus datos.");
+        } else {
+          throw error;
+        }
+      } else {
+        alert("¡Interés registrado! El dueño ya puede ver tu perfil y contactarte.");
+      }
+    } catch (err) {
+      console.error("Error registrando interés:", err);
+      alert("No se pudo registrar el interés. Intenta de nuevo.");
+    }
   };
 
   const HeaderNav = () => (
@@ -187,7 +212,7 @@ export default function Home() {
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '16px' }}>Excelente ubicación, 2 dormitorios, balcón corrido y cochera.</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
                     <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-earth)' }}>$350.000</span>
-                    <button className="btn-yerba" onClick={handleInterest}>Me interesa</button>
+                    <button className="btn-yerba" onClick={() => alert("¡Esta es una propiedad de ejemplo!")}>Me interesa</button>
                   </div>
                </div>
             )}
@@ -197,7 +222,7 @@ export default function Home() {
                  <h3>{l.title}</h3>
                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
                     <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-earth)' }}>${l.price.toLocaleString()}</span>
-                    <button className="btn-yerba" onClick={handleInterest}>Me interesa</button>
+                    <button className="btn-yerba" onClick={() => handleInterest(l.id)}>Me interesa</button>
                  </div>
                </div>
             ))}

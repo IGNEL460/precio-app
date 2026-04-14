@@ -12,6 +12,7 @@ type Suggestion = {
 export default function OwnerDashboard() {
   const [step, setStep] = useState<"list" | "create">("list");
   const [listings, setListings] = useState<any[]>([]);
+  const [interests, setInterests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form states
@@ -37,6 +38,25 @@ export default function OwnerDashboard() {
       .order("created_at", { ascending: false });
     
     setListings(data || []);
+    
+    // Traer Intereses
+    const listingIds = data?.map(l => l.id) || [];
+    if (listingIds.length > 0) {
+      const { data: interestsData } = await supabase
+        .from("interests")
+        .select(`
+          id,
+          status,
+          created_at,
+          tenant:profiles!interests_tenant_id_fkey(full_name, email),
+          listing:listings(title)
+        `)
+        .in("listing_id", listingIds)
+        .order("created_at", { ascending: false });
+      
+      setInterests(interestsData || []);
+    }
+
     setLoading(false);
   };
 
@@ -117,6 +137,48 @@ export default function OwnerDashboard() {
                 </div>
               </div>
             ))
+          )}
+
+          {/* Sección de Interesados */}
+          {interests.length > 0 && (
+            <div style={{ marginTop: '60px' }}>
+              <h2 style={{ fontSize: '1.8rem', marginBottom: '24px' }}>Inquilinos Interesados</h2>
+              <div className="card-home" style={{ padding: '0', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead style={{ background: '#F0F2E8', fontSize: '0.85rem' }}>
+                    <tr>
+                      <th style={{ padding: '16px' }}>INQUILINO</th>
+                      <th style={{ padding: '16px' }}>PROPIEDAD</th>
+                      <th style={{ padding: '16px' }}>FECHA</th>
+                      <th style={{ padding: '16px' }}>ACCIONES</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {interests.map((int) => (
+                      <tr key={int.id} style={{ borderBottom: '1px solid var(--surface-border)' }}>
+                        <td style={{ padding: '16px' }}>
+                          <strong>{int.tenant?.full_name}</strong><br/>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{int.tenant?.email}</span>
+                        </td>
+                        <td style={{ padding: '16px' }}>{int.listing?.title}</td>
+                        <td style={{ padding: '16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                          {new Date(int.created_at).toLocaleDateString()}
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <button 
+                            className="btn-yerba" 
+                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                            onClick={() => alert(`Próximamente: Abrir chat con ${int.tenant?.full_name}`)}
+                          >
+                            Contactar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
         </div>
       ) : (
