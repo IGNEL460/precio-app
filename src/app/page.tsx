@@ -16,6 +16,7 @@ type Listing = {
   city: string;
   has_garage: boolean;
   status: string;
+  images?: { image_url: string; label: string }[];
 };
 
 type UserProfile = {
@@ -77,7 +78,7 @@ export default function Home() {
     try {
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select("*, images:listing_images(image_url, label)")
         .lte("price", budget)
         .eq("city", city)
         .eq("status", "active")
@@ -216,16 +217,25 @@ export default function Home() {
                   </div>
                </div>
             )}
-            {listings.map(l => (
-               <div key={l.id} className="card-home animate-slide-up">
-                 <div style={{ height: '220px', background: '#E2E8CE', borderRadius: '16px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>🏢</div>
-                 <h3>{l.title}</h3>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
-                    <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-earth)' }}>${l.price.toLocaleString()}</span>
-                    <button className="btn-yerba" onClick={() => handleInterest(l.id)}>Me interesa</button>
+             {listings.map(l => {
+               const frontImage = l.images?.find(img => img.label.includes("Frente"))?.image_url;
+               return (
+                 <div key={l.id} className="card-home animate-slide-up">
+                   <div style={{ height: '220px', background: '#E2E8CE', borderRadius: '16px', marginBottom: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     {frontImage ? (
+                       <img src={frontImage} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                     ) : (
+                       <div style={{ fontSize: '3rem' }}>🏢</div>
+                     )}
+                   </div>
+                   <h3>{l.title}</h3>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
+                      <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-earth)' }}>${l.price.toLocaleString()}</span>
+                      <button className="btn-yerba" onClick={() => handleInterest(l.id)}>Me interesa</button>
+                   </div>
                  </div>
-               </div>
-            ))}
+               );
+             })}
           </div>
         </section>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />}
