@@ -66,11 +66,10 @@ export default function OwnerDashboard() {
   };
 
   const calculateSuggestions = async (val: number) => {
-    // Para el simulador "en vivo" antes de crear, hacemos una query manual
-    // Simulamos los saltos de 10%, 15%, 20%...
-    const factors = [0, 0.9, 0.85, 0.8]; 
+    // Simulamos los saltos de 0% (actual), 10%, 15%, 20%...
+    const factors = [1, 0.9, 0.85, 0.8]; 
     const results = await Promise.all(factors.map(async (f) => {
-      const p = val * f || val;
+      const p = val * f;
       const { count } = await supabase
         .from("profiles")
         .select("*", { count: 'exact', head: true })
@@ -326,7 +325,7 @@ export default function OwnerDashboard() {
                   <div key={i} style={{ background: 'white', padding: '15px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: s.discount_percent === 0 ? '2px solid var(--accent-primary)' : '1px solid var(--surface-border)' }}>
                     <div>
                       <div style={{ fontWeight: '800', fontSize: '1.1rem' }}>${s.suggested_price.toLocaleString()}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.discount_percent === 0 ? "Tu precio actual" : `Rebajado un ${s.discount_percent}%`}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.discount_percent === 0 ? "Precio Sugerido (Sin recargos)" : `Rebajado un ${s.discount_percent}%`}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 'bold', color: 'var(--accent-primary)', fontSize: '1.2rem' }}>{s.potential_matches}</div>
