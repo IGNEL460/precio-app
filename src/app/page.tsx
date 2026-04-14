@@ -42,8 +42,8 @@ const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, up
       )}
       {user ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
-          {/* Solo mostrar presupuesto si estamos en la vista de inquilino o inicio */}
-          {(view === "choice" || view === "tenant") && (
+          {/* Solo mostrar presupuesto si estamos específicamente en la vista de búsqueda (tenant) */}
+          {view === "tenant" && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
               <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
