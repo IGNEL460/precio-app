@@ -27,6 +27,53 @@ type UserProfile = {
   max_budget: number;
 };
 
+// Componente de Navegación Superior
+const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => (
+  <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+    {view !== "choice" ? (
+      <button onClick={() => setView("choice")} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+        ← Inicio
+      </button>
+    ) : <div />}
+    
+    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+      {profile?.role === "admin" && (
+        <button onClick={() => setView("admin")} style={{ background: '#E2E8CE', border: 'none', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>⚙️ Panel Admin</button>
+      )}
+      {user ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
+          {/* Solo mostrar presupuesto si estamos en la vista de inquilino o inicio */}
+          {(view === "choice" || view === "tenant") && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input 
+                  type="number" 
+                  step="1"
+                  onKeyDown={(e) => { if (e.key === '.' || e.key === ',') e.preventDefault(); }}
+                  value={tempBudget} 
+                  onChange={(e) => setTempBudget(parseInt(e.target.value) || "")}
+                  style={{ border: 'none', background: 'none', fontSize: '1rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
+                />
+                {tempBudget !== profile?.max_budget && tempBudget !== "" && (
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <button onClick={() => updateBudget(Number(tempBudget))} style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✔</button>
+                    <button onClick={() => setTempBudget(profile?.max_budget || "")} style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✖</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <span style={{ fontSize: '0.85rem' }}>Hola, <strong>{profile?.full_name?.split(" ")[0] || user.email.split("@")[0]}</strong></span>
+          <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Salir</button>
+        </div>
+      ) : (
+        <button className="btn-yerba" style={{ padding: '8px 20px', fontSize: '0.9rem' }} onClick={() => setShowAuth(true)}>Ingresar</button>
+      )}
+    </div>
+  </div>
+);
+
 export default function Home() {
   const [view, setView] = useState<"choice" | "tenant" | "owner" | "admin">("choice");
   const [showAuth, setShowAuth] = useState(false);
@@ -155,52 +202,21 @@ export default function Home() {
     }
   };
 
-  const HeaderNav = () => (
-    <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
-      {view !== "choice" ? (
-        <button onClick={() => setView("choice")} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: 'bold' }}>← Inicio</button>
-      ) : <div />}
-      
-      <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-        {profile?.role === "admin" && (
-          <button onClick={() => setView("admin")} style={{ background: '#E2E8CE', border: 'none', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>⚙️ Panel Admin</button>
-        )}
-        {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
-              <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input 
-                  type="number" 
-                  step="1"
-                  onKeyDown={(e) => { if (e.key === '.' || e.key === ',') e.preventDefault(); }}
-                  value={tempBudget} 
-                  onChange={(e) => setTempBudget(parseInt(e.target.value) || "")}
-                  style={{ border: 'none', background: 'none', fontSize: '1rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
-                />
-                {tempBudget !== profile?.max_budget && tempBudget !== "" && (
-                  <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={() => updateBudget(Number(tempBudget))} style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✔</button>
-                    <button onClick={() => setTempBudget(profile?.max_budget || "")} style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✖</button>
-                  </div>
-                )}
-              </div>
-            </div>
-            <span style={{ fontSize: '0.85rem' }}>Hola, <strong>{profile?.full_name?.split(" ")[0] || user.email.split("@")[0]}</strong></span>
-            <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Salir</button>
-          </div>
-        ) : (
-          <button className="btn-yerba" style={{ padding: '8px 20px', fontSize: '0.9rem' }} onClick={() => setShowAuth(true)}>Ingresar</button>
-        )}
-      </div>
-    </div>
-  );
-
   // --- VISTAS ---
   if (view === "choice") {
     return (
       <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', position: 'relative' }}>
-        <HeaderNav />
+        <HeaderNav 
+          view={view} 
+          setView={setView} 
+          profile={profile} 
+          user={user} 
+          tempBudget={tempBudget} 
+          setTempBudget={setTempBudget}
+          updateBudget={updateBudget}
+          handleLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
         <h1 className="animate-slide-up" style={{ fontSize: '4rem', marginBottom: '10px', fontWeight: '900' }}>Precio <span className="text-gradient">App</span></h1>
         <p className="animate-slide-up" style={{ color: 'var(--text-secondary)', fontSize: '1.3rem', marginBottom: '60px', textAlign: 'center' }}>Corrientes elige cuánto pagar.</p>
         <div style={{ display: 'flex', gap: '24px', width: '100%', maxWidth: '800px' }}>
@@ -228,7 +244,17 @@ export default function Home() {
   if (view === "tenant") {
     return (
       <main style={{ minHeight: '100vh', padding: '80px 20px 20px 20px', position: 'relative' }}>
-        <HeaderNav />
+        <HeaderNav 
+          view={view} 
+          setView={setView} 
+          profile={profile} 
+          user={user} 
+          tempBudget={tempBudget} 
+          setTempBudget={setTempBudget}
+          updateBudget={updateBudget}
+          handleLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
         <section style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
           <h2 className="animate-slide-up" style={{ fontSize: '2.5rem', marginBottom: '40px', fontWeight: '800' }}>Hogares en <span className="text-gradient">Corrientes</span></h2>
           <div className="card-home animate-slide-up" style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) 1fr auto', gap: '20px', alignItems: 'end', marginBottom: '60px', textAlign: 'left' }}>
@@ -300,7 +326,17 @@ export default function Home() {
   if (view === "admin") {
     return (
       <main style={{ minHeight: '100vh', padding: '80px 20px', position: 'relative' }}>
-        <HeaderNav />
+        <HeaderNav 
+          view={view} 
+          setView={setView} 
+          profile={profile} 
+          user={user} 
+          tempBudget={tempBudget} 
+          setTempBudget={setTempBudget}
+          updateBudget={updateBudget}
+          handleLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
         <AdminDashboard />
         <Notification 
           isOpen={notif.open} 
@@ -313,7 +349,17 @@ export default function Home() {
 
   return (
     <main style={{ minHeight: '100vh', padding: '80px 20px', position: 'relative' }}>
-      <HeaderNav />
+      <HeaderNav 
+          view={view} 
+          setView={setView} 
+          profile={profile} 
+          user={user} 
+          tempBudget={tempBudget} 
+          setTempBudget={setTempBudget}
+          updateBudget={updateBudget}
+          handleLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
       {!user ? (
         <div style={{ maxWidth: '500px', margin: '60px auto', textAlign: 'center' }}>
           <h1 style={{ marginBottom: '16px' }}>Acceso Propietarios</h1>
