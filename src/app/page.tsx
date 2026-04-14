@@ -60,6 +60,12 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (profile?.max_budget) {
+      setBudget(profile.max_budget);
+    }
+  }, [profile]);
+
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
     if (data) {
@@ -69,6 +75,20 @@ export default function Home() {
       } else {
         setBudget(data.max_budget);
       }
+    }
+  };
+
+  const updateBudget = async (newBudget: number) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ max_budget: newBudget })
+      .eq("id", user.id);
+    
+    if (!error) {
+      setProfile(prev => prev ? { ...prev, max_budget: newBudget } : null);
+      setBudget(newBudget);
+      setNotif({ open: true, msg: "Presupuesto actualizado correctamente." });
     }
   };
 
@@ -144,7 +164,16 @@ export default function Home() {
           <button onClick={() => setView("admin")} style={{ background: '#E2E8CE', border: 'none', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>⚙️ Panel Admin</button>
         )}
         {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
+              <input 
+                type="number" 
+                value={budget} 
+                onChange={(e) => updateBudget(Number(e.target.value))}
+                style={{ border: 'none', background: 'none', fontSize: '0.9rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
+              />
+            </div>
             <span style={{ fontSize: '0.85rem' }}>Hola, <strong>{profile?.full_name?.split(" ")[0] || user.email.split("@")[0]}</strong></span>
             <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Salir</button>
           </div>
@@ -190,10 +219,10 @@ export default function Home() {
         <HeaderNav />
         <section style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
           <h2 className="animate-slide-up" style={{ fontSize: '2.5rem', marginBottom: '40px', fontWeight: '800' }}>Hogares en <span className="text-gradient">Corrientes</span></h2>
-          <div className="card-home animate-slide-up" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.5fr', gap: '16px', alignItems: 'end', marginBottom: '60px', textAlign: 'left' }}>
+          <div className="card-home animate-slide-up" style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) 1fr auto', gap: '20px', alignItems: 'end', marginBottom: '60px', textAlign: 'left' }}>
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>PRESUPUESTO MÁXIMO</label>
-              <input type="number" className="input-home" value={budget} onChange={(e) => setBudget(Number(e.target.value) || "")} />
+              <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>Presupuesto</label>
+              <input type="number" placeholder="200000" className="input-home" value={budget} onChange={(e) => setBudget(Number(e.target.value) || "")} />
             </div>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>CIUDAD</label>
