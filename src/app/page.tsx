@@ -41,6 +41,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [notif, setNotif] = useState({ open: false, msg: "" });
+  const [tempBudget, setTempBudget] = useState<number | "">("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -63,6 +64,7 @@ export default function Home() {
   useEffect(() => {
     if (profile?.max_budget) {
       setBudget(profile.max_budget);
+      setTempBudget(profile.max_budget);
     }
   }, [profile]);
 
@@ -167,12 +169,22 @@ export default function Home() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
               <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
-              <input 
-                type="number" 
-                value={budget} 
-                onChange={(e) => updateBudget(Number(e.target.value))}
-                style={{ border: 'none', background: 'none', fontSize: '0.9rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <input 
+                  type="number" 
+                  step="1"
+                  onKeyDown={(e) => { if (e.key === '.' || e.key === ',') e.preventDefault(); }}
+                  value={tempBudget} 
+                  onChange={(e) => setTempBudget(parseInt(e.target.value) || "")}
+                  style={{ border: 'none', background: 'none', fontSize: '1rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
+                />
+                {tempBudget !== profile?.max_budget && tempBudget !== "" && (
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <button onClick={() => updateBudget(Number(tempBudget))} style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✔</button>
+                    <button onClick={() => setTempBudget(profile?.max_budget || "")} style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✖</button>
+                  </div>
+                )}
+              </div>
             </div>
             <span style={{ fontSize: '0.85rem' }}>Hola, <strong>{profile?.full_name?.split(" ")[0] || user.email.split("@")[0]}</strong></span>
             <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Salir</button>
