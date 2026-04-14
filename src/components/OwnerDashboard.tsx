@@ -79,7 +79,6 @@ export default function OwnerDashboard() {
       const { count } = await supabase
         .from("profiles")
         .select("*", { count: 'exact', head: true })
-        .eq("role", "tenant")
         .gte("max_budget", p);
       
       return {
