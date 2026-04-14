@@ -21,7 +21,12 @@ export default function OwnerDashboard() {
   const [price, setPrice] = useState<number | "">("");
   const [city, setCity] = useState("Corrientes");
   const [hasGarage, setHasGarage] = useState(false);
+  const [rooms, setRooms] = useState(1);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [uploading, setUploading] = useState(false);
+  
+  // Array de objetos para las fotos: { label: string, url: string | null }
+  const [photos, setPhotos] = useState<{label: string, url: string | null}[]>([]);
 
   useEffect(() => {
     fetchMyListings();
@@ -81,6 +86,45 @@ export default function OwnerDashboard() {
     setSuggestions(results);
   };
 
+  // Recalcular los slots de fotos cuando cambien las habitaciones o el garage
+  useEffect(() => {
+    const slots = [{ label: "Frente de la propiedad", url: null }];
+    for (let i = 1; i <= rooms; i++) {
+      slots.push({ label: `Habitación ${i}`, url: null });
+    }
+    if (hasGarage) {
+      slots.push({ label: "Garage / Cochera", url: null });
+    }
+    setPhotos(slots);
+  }, [rooms, hasGarage]);
+
+  const handleFileUpload = async (index: number, file: File) => {
+    setUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `listings/${fileName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('tickets') // Usamos el bucket existente por ahora, o podrías crear 'properties'
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('tickets')
+        .getPublicUrl(filePath);
+
+      const newPhotos = [...photos];
+      newPhotos[index].url = publicUrl;
+      setPhotos(newPhotos);
+    } catch (err: any) {
+      alert("Error subiendo imagen: " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!price) return;
@@ -88,23 +132,37 @@ export default function OwnerDashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from("listings").insert({
+    const { data: listingData, error: listingError } = await supabase.from("listings").insert({
       owner_id: user.id,
       title,
       description,
       price: Number(price),
       city,
       has_garage: hasGarage,
+      rooms: rooms,
       status: "active"
-    });
+    }).select().single();
 
-    if (!error) {
-      alert("¡Propiedad publicada con éxito!");
-      setStep("list");
-      fetchMyListings();
-      // Limpiar form
-      setTitle(""); setDescription(""); setPrice("");
+    if (listingError) {
+      alert("Error al crear oferta: " + listingError.message);
+      return;
     }
+
+    // Insertar las imágenes vinculadas
+    const validPhotos = photos.filter(p => p.url).map(p => ({
+      listing_id: listingData.id,
+      image_url: p.url,
+      label: p.label
+    }));
+
+    if (validPhotos.length > 0) {
+      await supabase.from("listing_images").insert(validPhotos);
+    }
+
+    alert("¡Propiedad publicada con éxito!");
+    setStep("list");
+    fetchMyListings();
+    setTitle(""); setDescription(""); setPrice(""); setRooms(1);
   };
 
   if (loading) return <p>Cargando tus propiedades...</p>;
@@ -217,10 +275,36 @@ export default function OwnerDashboard() {
                   </select>
                 </div>
              </div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <input type="checkbox" checked={hasGarage} onChange={e => setHasGarage(e.target.checked)} style={{ width: '20px', height: '20px' }} />
-                <label>Incluye cochera</label>
-             </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="checkbox" checked={hasGarage} onChange={e => setHasGarage(e.target.checked)} style={{ width: '20px', height: '20px' }} />
+                  <label>Incluye cochera</label>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>CANT. HABITACIONES</label>
+                  <input type="number" min="1" max="10" className="input-home" value={rooms} onChange={e => setRooms(parseInt(e.target.value) || 1)} />
+                </div>
+              </div>
+
+              {/* CARGA DE FOTOS DINÁMICA */}
+              <div style={{ borderTop: '1px solid var(--surface-border)', paddingTop: '20px' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '15px' }}>📸 Fotos requeridas ({photos.length})</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {photos.map((photo, idx) => (
+                    <div key={idx} style={{ background: '#f8f8f8', padding: '12px', borderRadius: '12px', border: '1px dashed #ccc', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-secondary)' }}>{photo.label.toUpperCase()}</div>
+                      {photo.url ? (
+                        <div style={{ position: 'relative', height: '80px' }}>
+                           <img src={photo.url} alt="subida" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                           <button onClick={() => {const n = [...photos]; n[idx].url = null; setPhotos(n);}} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', fontSize: '10px' }}>✕</button>
+                        </div>
+                      ) : (
+                        <input type="file" accept="image/*" onChange={(e) => e.target.files && handleFileUpload(idx, e.target.files[0])} style={{ fontSize: '0.7rem', width: '100%' }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
              <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
                 <button type="submit" className="btn-yerba" style={{ flex: 1 }}>Publicar Ahora</button>
                 <button type="button" onClick={() => setStep("list")} style={{ background: 'none', border: '1px solid var(--surface-border)', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer' }}>Cancelar</button>
