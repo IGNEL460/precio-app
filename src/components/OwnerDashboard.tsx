@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import Notification from "./Notification";
 
 type Suggestion = {
   discount_percent: number;
@@ -14,6 +15,7 @@ export default function OwnerDashboard() {
   const [listings, setListings] = useState<any[]>([]);
   const [interests, setInterests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notif, setNotif] = useState({ open: false, msg: "" });
 
   // Form states
   const [title, setTitle] = useState("");
@@ -36,30 +38,34 @@ export default function OwnerDashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
-      .from("listings")
-      .select("*")
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: false });
-    
-    setListings(data || []);
-    
-    // Traer Intereses
-    const listingIds = data?.map(l => l.id) || [];
-    if (listingIds.length > 0) {
-      const { data: interestsData } = await supabase
-        .from("interests")
-        .select(`
-          id,
-          status,
-          created_at,
-          tenant:profiles!interests_tenant_id_fkey(full_name, email),
-          listing:listings(title)
-        `)
-        .in("listing_id", listingIds)
+    try {
+      const { data } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       
-      setInterests(interestsData || []);
+      setListings(data || []);
+      
+      // Traer Intereses
+      const listingIds = data?.map(l => l.id) || [];
+      if (listingIds.length > 0) {
+        const { data: interestsData } = await supabase
+          .from("interests")
+          .select(`
+            id,
+            status,
+            created_at,
+            tenant:profiles!interests_tenant_id_fkey(full_name, email),
+            listing:listings(title)
+          `)
+          .in("listing_id", listingIds)
+          .order("created_at", { ascending: false });
+        
+        setInterests(interestsData || []);
+      }
+    } catch (err: any) {
+       setNotif({ open: true, msg: "Error cargando datos: " + err.message });
     }
 
     setLoading(false);
@@ -118,7 +124,7 @@ export default function OwnerDashboard() {
       newPhotos[index].url = publicUrl;
       setPhotos(newPhotos);
     } catch (err: any) {
-      alert("Error subiendo imagen: " + err.message);
+      setNotif({ open: true, msg: "Error subiendo imagen: " + err.message });
     } finally {
       setUploading(false);
     }
@@ -143,7 +149,7 @@ export default function OwnerDashboard() {
     }).select().single();
 
     if (listingError) {
-      alert("Error al crear oferta: " + listingError.message);
+      setNotif({ open: true, msg: "Error al crear oferta: " + listingError.message });
       return;
     }
 
@@ -158,7 +164,10 @@ export default function OwnerDashboard() {
       await supabase.from("listing_images").insert(validPhotos);
     }
 
-    alert("¡Propiedad publicada con éxito! Se han guardado las fotos que subiste. Recuerda que puedes editar esta publicación más tarde para añadir las fotos que falten o cambiar los detalles de la cochera.");
+    setNotif({ 
+      open: true, 
+      msg: "¡Propiedad publicada con éxito! Se han guardado las fotos que subiste. Recuerda que puedes editar esta publicación más tarde para añadir las fotos que falten o cambiar los detalles de la cochera." 
+    });
     setStep("list");
     fetchMyListings();
     setTitle(""); setDescription(""); setPrice(""); setRooms(1);
@@ -342,6 +351,11 @@ export default function OwnerDashboard() {
           </div>
         </div>
       )}
+      <Notification 
+        isOpen={notif.open} 
+        message={notif.msg} 
+        onClose={() => setNotif({ ...notif, open: false })} 
+      />
     </div>
   );
 }

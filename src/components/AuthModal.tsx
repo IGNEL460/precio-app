@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import Notification from "./Notification";
 
 interface AuthModalProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notif, setNotif] = useState({ open: false, msg: "" });
 
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -55,7 +57,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
           }
         });
         if (error) throw error;
-        alert("¡Registro exitoso! Por favor verifica tu correo electrónico.");
+        setNotif({ open: true, msg: "¡Registro exitoso! Por favor verifica tu correo electrónico." });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -156,6 +158,14 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
           </span>
         </p>
       </div>
+      <Notification 
+        isOpen={notif.open} 
+        message={notif.msg} 
+        onClose={() => {
+          setNotif({ ...notif, open: false });
+          if (notif.msg.includes("exitoso")) onClose();
+        }} 
+      />
     </div>
   );
 }

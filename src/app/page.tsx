@@ -7,6 +7,7 @@ import AuthModal from "@/components/AuthModal";
 import OnboardingModal from "@/components/OnboardingModal";
 import OwnerDashboard from "@/components/OwnerDashboard";
 import AdminDashboard from "@/components/AdminDashboard";
+import Notification from "@/components/Notification";
 
 type Listing = {
   id: string;
@@ -39,6 +40,7 @@ export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [notif, setNotif] = useState({ open: false, msg: "" });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -118,16 +120,16 @@ export default function Home() {
 
       if (error) {
         if (error.code === '23505') {
-          alert("Ya mostraste interés por esta propiedad. El dueño ya tiene tus datos.");
+          setNotif({ open: true, msg: "Ya mostraste interés por esta propiedad. El dueño ya tiene tus datos." });
         } else {
           throw error;
         }
       } else {
-        alert("¡Interés registrado! El dueño ya puede ver tu perfil y contactarte.");
+        setNotif({ open: true, msg: "¡Interés registrado! El dueño ya puede ver tu perfil y contactarte." });
       }
     } catch (err) {
       console.error("Error registrando interés:", err);
-      alert("No se pudo registrar el interés. Intenta de nuevo.");
+      setNotif({ open: true, msg: "No se pudo registrar el interés. Intenta de nuevo." });
     }
   };
 
@@ -173,6 +175,11 @@ export default function Home() {
           </button>
         </div>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />}
+        <Notification 
+          isOpen={notif.open} 
+          message={notif.msg} 
+          onClose={() => setNotif({ ...notif, open: false })} 
+        />
       </main>
     );
   }
@@ -240,6 +247,11 @@ export default function Home() {
         </section>
         {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />}
         {showOnboarding && <OnboardingModal onComplete={(b) => { setBudget(b); setShowOnboarding(false); handleSearch(); }} />}
+        <Notification 
+          isOpen={notif.open} 
+          message={notif.msg} 
+          onClose={() => setNotif({ ...notif, open: false })} 
+        />
       </main>
     );
   }
@@ -249,6 +261,11 @@ export default function Home() {
       <main style={{ minHeight: '100vh', padding: '80px 20px', position: 'relative' }}>
         <HeaderNav />
         <AdminDashboard />
+        <Notification 
+          isOpen={notif.open} 
+          message={notif.msg} 
+          onClose={() => setNotif({ ...notif, open: false })} 
+        />
       </main>
     );
   }
@@ -263,6 +280,11 @@ export default function Home() {
         </div>
       ) : <OwnerDashboard />}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={() => setShowAuth(false)} />}
+      <Notification 
+        isOpen={notif.open} 
+        message={notif.msg} 
+        onClose={() => setNotif({ ...notif, open: false })} 
+      />
     </main>
   );
 }
