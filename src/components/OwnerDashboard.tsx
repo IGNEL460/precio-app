@@ -158,7 +158,7 @@ export default function OwnerDashboard() {
       await supabase.from("listing_images").insert(validPhotos);
     }
 
-    alert("¡Propiedad publicada con éxito!");
+    alert("¡Propiedad publicada con éxito! Se han guardado las fotos que subiste. Recuerda que puedes editar esta publicación más tarde para añadir las fotos que falten o cambiar los detalles de la cochera.");
     setStep("list");
     fetchMyListings();
     setTitle(""); setDescription(""); setPrice(""); setRooms(1);
