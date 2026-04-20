@@ -125,7 +125,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (profile?.max_budget) {
+    if (profile !== null) {
       setBudget(profile.max_budget);
       setTempBudget(profile.max_budget);
     }
@@ -135,10 +135,10 @@ export default function Home() {
     const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
     if (data) {
       setProfile(data);
+      setBudget(data.max_budget);
+      setTempBudget(data.max_budget);
       if (data.max_budget === 0 && data.role === "tenant") {
         setShowOnboarding(true);
-      } else {
-        setBudget(data.max_budget);
       }
     }
   };
@@ -153,6 +153,7 @@ export default function Home() {
     if (!error) {
       setProfile(prev => prev ? { ...prev, max_budget: newBudget } : null);
       setBudget(newBudget);
+      setTempBudget(newBudget);
       setNotif({ open: true, msg: "Presupuesto actualizado correctamente." });
     }
   };
