@@ -72,7 +72,7 @@ const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, up
                   />
                   {(isFocused || isBudgetModified) && (
                     <button 
-                      onClick={() => { setTempBudget(budget || ""); setIsFocused(false); }} 
+                      onClick={() => { setTempBudget(profile?.max_budget || ""); setIsFocused(false); }} 
                       style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       ✖
