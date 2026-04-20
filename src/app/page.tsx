@@ -30,7 +30,7 @@ type UserProfile = {
 // Componente de Navegación Superior
 const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => {
   const [isFocused, setIsFocused] = useState(false);
-  const isModified = tempBudget !== profile?.max_budget && tempBudget !== "";
+  const isBudgetModified = Number(tempBudget) !== Number(profile?.max_budget) && tempBudget !== "";
 
   return (
     <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
@@ -51,7 +51,7 @@ const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, up
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
                 <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {isModified && (
+                  {isBudgetModified && (
                     <button 
                       onClick={() => { updateBudget(Number(tempBudget)); setIsFocused(false); }} 
                       style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -66,9 +66,10 @@ const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, up
                     value={tempBudget} 
                     onChange={(e) => setTempBudget(parseInt(e.target.value) || "")}
                     onFocus={() => setIsFocused(true)}
-                    style={{ border: 'none', background: 'none', fontSize: '1rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
+                    placeholder="0"
+                    style={{ border: 'none', borderBottom: '1px solid #eee', background: 'none', fontSize: '1rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
                   />
-                  {(isFocused || isModified) && (
+                  {(isFocused || isBudgetModified) && (
                     <button 
                       onClick={() => { setTempBudget(profile?.max_budget || ""); setIsFocused(false); }} 
                       style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -277,7 +278,17 @@ export default function Home() {
           <div className="card-home animate-slide-up" style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) 1fr auto', gap: '20px', alignItems: 'end', marginBottom: '60px', textAlign: 'left' }}>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>Presupuesto</label>
-              <input type="number" placeholder="200000" className="input-home" value={budget} onChange={(e) => setBudget(Number(e.target.value) || "")} />
+              <input 
+                type="number" 
+                placeholder="200000" 
+                className="input-home" 
+                value={budget} 
+                onChange={(e) => {
+                  const val = Number(e.target.value) || "";
+                  setBudget(val);
+                  setTempBudget(val);
+                }} 
+              />
             </div>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>CIUDAD</label>
