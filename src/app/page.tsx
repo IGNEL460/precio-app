@@ -28,9 +28,9 @@ type UserProfile = {
 };
 
 // Componente de Navegación Superior
-const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => {
+const HeaderNav = ({ view, setView, profile, user, budget, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => {
   const [isFocused, setIsFocused] = useState(false);
-  const isBudgetModified = Number(tempBudget) !== Number(profile?.max_budget) && tempBudget !== "";
+  const isBudgetModified = Number(tempBudget) !== Number(budget) && tempBudget !== "";
 
   return (
     <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
@@ -71,7 +71,7 @@ const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, up
                   />
                   {(isFocused || isBudgetModified) && (
                     <button 
-                      onClick={() => { setTempBudget(profile?.max_budget || ""); setIsFocused(false); }} 
+                      onClick={() => { setTempBudget(budget || ""); setIsFocused(false); }} 
                       style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       ✖
@@ -228,7 +228,8 @@ export default function Home() {
           view={view} 
           setView={setView} 
           profile={profile} 
-          user={user} 
+          user={user}
+          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
@@ -266,7 +267,8 @@ export default function Home() {
           view={view} 
           setView={setView} 
           profile={profile} 
-          user={user} 
+          user={user}
+          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
@@ -358,7 +360,8 @@ export default function Home() {
           view={view} 
           setView={setView} 
           profile={profile} 
-          user={user} 
+          user={user}
+          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
@@ -381,7 +384,8 @@ export default function Home() {
           view={view} 
           setView={setView} 
           profile={profile} 
-          user={user} 
+          user={user}
+          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
