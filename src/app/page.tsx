@@ -28,51 +28,67 @@ type UserProfile = {
 };
 
 // Componente de Navegación Superior
-const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => (
-  <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
-    {view !== "choice" ? (
-      <button onClick={() => setView("choice")} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-        ← Inicio
-      </button>
-    ) : <div />}
-    
-    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-      {profile?.role === "admin" && (
-        <button onClick={() => setView("admin")} style={{ background: '#E2E8CE', border: 'none', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>⚙️ Panel Admin</button>
-      )}
-      {user ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
-          {/* Solo mostrar presupuesto si estamos específicamente en la vista de búsqueda (tenant) */}
-          {view === "tenant" && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
-              <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <input 
-                  type="number" 
-                  step="1"
-                  onKeyDown={(e) => { if (e.key === '.' || e.key === ',') e.preventDefault(); }}
-                  value={tempBudget} 
-                  onChange={(e) => setTempBudget(parseInt(e.target.value) || "")}
-                  style={{ border: 'none', background: 'none', fontSize: '1rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
-                />
-                {tempBudget !== profile?.max_budget && tempBudget !== "" && (
-                  <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={() => updateBudget(Number(tempBudget))} style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✔</button>
-                    <button onClick={() => setTempBudget(profile?.max_budget || "")} style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✖</button>
-                  </div>
-                )}
+const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const isModified = tempBudget !== profile?.max_budget && tempBudget !== "";
+
+  return (
+    <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+      {view !== "choice" ? (
+        <button onClick={() => setView("choice")} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          ← Inicio
+        </button>
+      ) : <div />}
+      
+      <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        {profile?.role === "admin" && (
+          <button onClick={() => setView("admin")} style={{ background: '#E2E8CE', border: 'none', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>⚙️ Panel Admin</button>
+        )}
+        {user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'white', padding: '6px 16px', borderRadius: '30px', boxShadow: 'var(--shadow-sm)' }}>
+            {/* Solo mostrar presupuesto si estamos específicamente en la vista de búsqueda (tenant) */}
+            {view === "tenant" && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', borderRight: '1px solid #eee', paddingRight: '12px' }}>
+                <span style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Presupuesto</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {isModified && (
+                    <button 
+                      onClick={() => { updateBudget(Number(tempBudget)); setIsFocused(false); }} 
+                      style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      ✔
+                    </button>
+                  )}
+                  <input 
+                    type="number" 
+                    step="1"
+                    onKeyDown={(e) => { if (e.key === '.' || e.key === ',') e.preventDefault(); }}
+                    value={tempBudget} 
+                    onChange={(e) => setTempBudget(parseInt(e.target.value) || "")}
+                    onFocus={() => setIsFocused(true)}
+                    style={{ border: 'none', background: 'none', fontSize: '1rem', fontWeight: '900', width: '80px', outline: 'none', color: 'var(--text-primary)' }}
+                  />
+                  {(isFocused || isModified) && (
+                    <button 
+                      onClick={() => { setTempBudget(profile?.max_budget || ""); setIsFocused(false); }} 
+                      style={{ background: '#f44336', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      ✖
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-          <span style={{ fontSize: '0.85rem' }}>Hola, <strong>{profile?.full_name?.split(" ")[0] || user.email.split("@")[0]}</strong></span>
-          <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Salir</button>
-        </div>
-      ) : (
-        <button className="btn-yerba" style={{ padding: '8px 20px', fontSize: '0.9rem' }} onClick={() => setShowAuth(true)}>Ingresar</button>
-      )}
+            )}
+            <span style={{ fontSize: '0.85rem' }}>Hola, <strong>{profile?.full_name?.split(" ")[0] || user.email.split("@")[0]}</strong></span>
+            <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#d32f2f', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Salir</button>
+          </div>
+        ) : (
+          <button className="btn-yerba" style={{ padding: '8px 20px', fontSize: '0.9rem' }} onClick={() => setShowAuth(true)}>Ingresar</button>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function Home() {
   const [view, setView] = useState<"choice" | "tenant" | "owner" | "admin">("choice");
