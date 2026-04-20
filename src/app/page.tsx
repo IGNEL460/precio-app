@@ -25,12 +25,13 @@ type UserProfile = {
   full_name: string;
   role: "tenant" | "owner" | "admin";
   max_budget: number;
+  budget_updated_at?: string;
 };
 
 // Componente de Navegación Superior
-const HeaderNav = ({ view, setView, profile, user, budget, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => {
+const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => {
   const [isFocused, setIsFocused] = useState(false);
-  const isBudgetModified = Number(tempBudget) !== Number(budget) && tempBudget !== "";
+  const isBudgetModified = Number(tempBudget) !== Number(profile?.max_budget) && tempBudget !== "";
 
   return (
     <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
@@ -145,17 +146,32 @@ export default function Home() {
   };
 
   const updateBudget = async (newBudget: number) => {
-    if (!user) return;
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return;
+
+    // Verificar restricción semanal si existe la columna en el perfil
+    if (profile?.budget_updated_at) {
+      const lastUpdate = new Date(profile.budget_updated_at);
+      const now = new Date();
+      const diffDays = (now.getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
+      if (diffDays < 7) {
+        setNotif({ open: true, msg: `Solo puedes cambiar tu presupuesto oficial una vez por semana. (Faltan ${Math.ceil(7 - diffDays)} días)` });
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("profiles")
-      .update({ max_budget: newBudget })
-      .eq("id", user.id);
+      .update({ 
+        max_budget: newBudget,
+        budget_updated_at: new Date().toISOString() 
+      })
+      .eq("id", authUser.id);
     
     if (!error) {
-      setProfile(prev => prev ? { ...prev, max_budget: newBudget } : null);
-      setBudget(newBudget);
+      setProfile(prev => prev ? { ...prev, max_budget: newBudget, budget_updated_at: new Date().toISOString() } : null);
       setTempBudget(newBudget);
-      setNotif({ open: true, msg: "Presupuesto actualizado correctamente." });
+      setNotif({ open: true, msg: "Presupuesto oficial actualizado correctamente." });
     }
   };
 
@@ -229,7 +245,6 @@ export default function Home() {
           setView={setView} 
           profile={profile} 
           user={user}
-          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
@@ -268,7 +283,6 @@ export default function Home() {
           setView={setView} 
           profile={profile} 
           user={user}
-          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
@@ -285,11 +299,7 @@ export default function Home() {
                 placeholder="200000" 
                 className="input-home" 
                 value={budget} 
-                onChange={(e) => {
-                  const val = Number(e.target.value) || "";
-                  setBudget(val);
-                  setTempBudget(val);
-                }} 
+                onChange={(e) => setBudget(Number(e.target.value) || "")} 
               />
             </div>
             <div>
@@ -361,7 +371,6 @@ export default function Home() {
           setView={setView} 
           profile={profile} 
           user={user}
-          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
@@ -385,7 +394,6 @@ export default function Home() {
           setView={setView} 
           profile={profile} 
           user={user}
-          budget={budget} 
           tempBudget={tempBudget} 
           setTempBudget={setTempBudget}
           updateBudget={updateBudget}
