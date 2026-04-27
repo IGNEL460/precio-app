@@ -153,17 +153,7 @@ export default function Home() {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) return;
 
-    // Verificar restricción semanal si existe la columna en el perfil
-    if (profile?.budget_updated_at) {
-      const lastUpdate = new Date(profile.budget_updated_at);
-      const now = new Date();
-      const diffDays = (now.getTime() - lastUpdate.getTime()) / (1000 * 3600 * 24);
-      if (diffDays < 7) {
-        setNotif({ open: true, msg: `Solo puedes cambiar tu presupuesto oficial una vez por semana. (Faltan ${Math.ceil(7 - diffDays)} días)` });
-        return;
-      }
-    }
-
+    // Hemos eliminado la restricción semanal para facilitar las pruebas
     setIsSavingBudget(true);
     const { error } = await supabase
       .from("profiles")
@@ -177,12 +167,16 @@ export default function Home() {
     if (!error) {
       setProfile(prev => prev ? { ...prev, max_budget: newBudget, budget_updated_at: new Date().toISOString() } : null);
       setTempBudget(newBudget);
+      setBudget(newBudget); // Sincronizar también el filtro de búsqueda
       setNotif({ open: true, msg: "Presupuesto oficial actualizado correctamente." });
+    } else {
+      console.error("Error actualizando presupuesto:", error);
+      setNotif({ open: true, msg: "Error al guardar: " + error.message });
     }
   };
 
   const handleSearch = async () => {
-    if (!budget) return;
+    if (budget === "" || budget <= 0) return;
     setLoading(true);
     setSearched(true);
 
