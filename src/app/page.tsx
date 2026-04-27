@@ -31,9 +31,9 @@ type UserProfile = {
 };
 
 // Componente de Navegación Superior
-const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth }: any) => {
+const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, updateBudget, handleLogout, setShowAuth, isSavingBudget }: any) => {
   const [isFocused, setIsFocused] = useState(false);
-  const isBudgetModified = Number(tempBudget) !== Number(profile?.max_budget) && tempBudget !== "";
+  const isBudgetModified = profile && tempBudget !== "" && Math.round(Number(tempBudget)) !== Math.round(Number(profile.max_budget));
 
   return (
     <div style={{ position: 'absolute', top: '20px', right: '20px', left: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
@@ -57,9 +57,10 @@ const HeaderNav = ({ view, setView, profile, user, tempBudget, setTempBudget, up
                   {isBudgetModified && (
                     <button 
                       onClick={() => { updateBudget(Number(tempBudget)); setIsFocused(false); }} 
-                      style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ background: isSavingBudget ? '#ccc' : '#4CAF50', color: 'white', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      disabled={isSavingBudget}
                     >
-                      ✔
+                      {isSavingBudget ? "..." : "✔"}
                     </button>
                   )}
                   <input 
@@ -109,6 +110,7 @@ export default function Home() {
   const [searched, setSearched] = useState(false);
   const [notif, setNotif] = useState({ open: false, msg: "" });
   const [tempBudget, setTempBudget] = useState<number | "">("");
+  const [isSavingBudget, setIsSavingBudget] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -162,6 +164,7 @@ export default function Home() {
       }
     }
 
+    setIsSavingBudget(true);
     const { error } = await supabase
       .from("profiles")
       .update({ 
@@ -170,6 +173,7 @@ export default function Home() {
       })
       .eq("id", authUser.id);
     
+    setIsSavingBudget(false);
     if (!error) {
       setProfile(prev => prev ? { ...prev, max_budget: newBudget, budget_updated_at: new Date().toISOString() } : null);
       setTempBudget(newBudget);
@@ -260,6 +264,7 @@ export default function Home() {
           updateBudget={updateBudget}
           handleLogout={handleLogout}
           setShowAuth={setShowAuth}
+          isSavingBudget={isSavingBudget}
         />
         <h1 className="animate-slide-up" style={{ fontSize: '4rem', marginBottom: '10px', fontWeight: '900' }}>Precio <span className="text-gradient">App</span></h1>
         <p className="animate-slide-up" style={{ color: 'var(--text-secondary)', fontSize: '1.3rem', marginBottom: '60px', textAlign: 'center' }}>Corrientes elige cuánto pagar.</p>
@@ -298,6 +303,7 @@ export default function Home() {
           updateBudget={updateBudget}
           handleLogout={handleLogout}
           setShowAuth={setShowAuth}
+          isSavingBudget={isSavingBudget}
         />
         <section style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
           <h2 className="animate-slide-up" style={{ fontSize: '2.5rem', marginBottom: '40px', fontWeight: '800' }}>Hogares en <span className="text-gradient">Corrientes</span></h2>
@@ -391,6 +397,7 @@ export default function Home() {
           updateBudget={updateBudget}
           handleLogout={handleLogout}
           setShowAuth={setShowAuth}
+          isSavingBudget={isSavingBudget}
         />
         <AdminDashboard />
         <Notification 
@@ -414,6 +421,7 @@ export default function Home() {
           updateBudget={updateBudget}
           handleLogout={handleLogout}
           setShowAuth={setShowAuth}
+          isSavingBudget={isSavingBudget}
         />
       {!user ? (
         <div style={{ maxWidth: '500px', margin: '60px auto', textAlign: 'center' }}>
