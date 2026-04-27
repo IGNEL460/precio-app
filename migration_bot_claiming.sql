@@ -22,3 +22,12 @@ USING (status = 'active' OR is_bot_generated = true);
 
 -- Optional: Index for faster lookup of unclaimed bot listings
 CREATE INDEX IF NOT EXISTS idx_listings_bot_unclaimed ON listings(is_bot_generated) WHERE is_bot_generated = true;
+
+-- Tabla para rastrear notificaciones enviadas y evitar spam
+CREATE TABLE IF NOT EXISTS sent_notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    listing_id UUID REFERENCES listings(id) ON DELETE CASCADE,
+    sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(profile_id, listing_id) -- Evita enviar el mismo dpto al mismo usuario
+);

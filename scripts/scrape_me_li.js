@@ -2,8 +2,9 @@ const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
 const dotenv = require('dotenv');
 
-// Cargar variables de entorno
+// Cargar variables de entorno (intentar .env y .env.local)
 dotenv.config();
+dotenv.config({ path: '.env.local' });
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
