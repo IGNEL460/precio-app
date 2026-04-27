@@ -191,6 +191,8 @@ export default function ScanPage() {
                         {/* Volver */}
                         <button
                             onClick={() => router.back()}
+                            title="Volver"
+                            aria-label="Volver"
                             style={{ background: "rgba(255,255,255,0.2)", color: "white", width: "50px", height: "50px", borderRadius: "50%", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(5px)" }}
                         >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
@@ -200,13 +202,19 @@ export default function ScanPage() {
                         <button
                             onClick={capturePhoto}
                             className="capture-button"
+                            title="Capturar Foto"
+                            aria-label="Capturar Foto"
                             style={{ width: "70px", height: "70px", borderRadius: "50%", background: "white", border: "5px solid rgba(255,255,255,0.4)", cursor: "pointer", outline: "2px solid white", outlineOffset: "3px" }}
                         />
 
                         {/* Botón Subir Galería */}
-                        <label style={{ background: "rgba(255,255,255,0.2)", color: "white", width: "50px", height: "50px", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(5px)" }}>
+                        <label 
+                            title="Subir desde galería"
+                            aria-label="Subir desde galería"
+                            style={{ background: "rgba(255,255,255,0.2)", color: "white", width: "50px", height: "50px", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(5px)" }}
+                        >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
-                            <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} />
+                            <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: "none" }} title="Seleccionar imagen" />
                         </label>
                     </div>
                 </div>

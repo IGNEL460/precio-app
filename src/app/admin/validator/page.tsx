@@ -309,8 +309,9 @@ export default function ValidatorPage() {
                                 {validationStep === 2 && (
                                     <>
                                         <div className={styles.fieldGroup}>
-                                            <label className={styles.label}>Fecha</label>
+                                            <label htmlFor="ticket-date" className={styles.label}>Fecha</label>
                                             <input
+                                                id="ticket-date"
                                                 type="date"
                                                 value={ocrData?.date || ""}
                                                 onChange={(e) => setOcrData(prev => prev ? { ...prev, date: e.target.value } : null)}
@@ -332,12 +333,14 @@ export default function ValidatorPage() {
                                                 <div key={index} className={styles.itemRow}>
                                                     <input
                                                         type="text"
+                                                        title="Nombre del producto"
                                                         value={item.name}
                                                         onChange={(e) => handleUpdateItem(index, 'name', e.target.value)}
                                                         className={styles.input}
                                                     />
                                                     <input
                                                         type="number"
+                                                        title="Precio del producto"
                                                         value={Number.isNaN(item.price) ? "" : item.price}
                                                         onChange={(e) => {
                                                             const val = parseFloat(e.target.value);

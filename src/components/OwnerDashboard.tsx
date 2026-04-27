@@ -14,6 +14,7 @@ export default function OwnerDashboard() {
   const [step, setStep] = useState<"list" | "create">("list");
   const [listings, setListings] = useState<any[]>([]);
   const [interests, setInterests] = useState<any[]>([]);
+  const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notif, setNotif] = useState({ open: false, msg: "" });
 
@@ -32,7 +33,23 @@ export default function OwnerDashboard() {
 
   useEffect(() => {
     fetchMyListings();
+    fetchOpportunities();
   }, []);
+
+  const fetchOpportunities = async () => {
+    try {
+      const { data } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("is_bot_generated", true)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+      
+      setOpportunities(data || []);
+    } catch (err) {
+      console.error("Error fetching opportunities:", err);
+    }
+  };
 
   const fetchMyListings = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -172,17 +189,76 @@ export default function OwnerDashboard() {
     setTitle(""); setDescription(""); setPrice(""); setRooms(1);
   };
 
+  const handleClaim = async (listingId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .update({
+          owner_id: user.id,
+          is_bot_generated: false,
+          claimed_at: new Date().toISOString()
+        })
+        .eq("id", listingId);
+
+      if (error) throw error;
+
+      setNotif({ open: true, msg: "¡Propiedad reclamada con éxito! Ahora es tuya y puedes gestionarla." });
+      fetchMyListings();
+      fetchOpportunities();
+    } catch (err: any) {
+      setNotif({ open: true, msg: "Error al reclamar: " + err.message });
+    }
+  };
+
   if (loading) return <p>Cargando tus propiedades...</p>;
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
         <h1 style={{ fontSize: '2.4rem' }}>Mis Propiedades</h1>
-        {step === "list" && (
-          <button className="btn-yerba" onClick={() => setStep("create")}>+ Publicar nueva</button>
-        )}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {step === "list" && (
+            <>
+              <button 
+                className="btn-yerba" 
+                style={{ background: '#E2E8CE', color: 'var(--text-primary)' }}
+                onClick={() => setStep("list")}
+              >
+                📦 Mis Ofertas
+              </button>
+              <button className="btn-yerba" onClick={() => setStep("create")}>+ Publicar nueva</button>
+            </>
+          )}
+        </div>
       </div>
 
+      {/* Tabs / Opciones */}
+      {step === "list" && opportunities.length > 0 && (
+        <div style={{ marginBottom: '30px', background: '#FFFBEB', padding: '15px', borderRadius: '16px', border: '1px solid #FEF3C7' }}>
+          <h3 style={{ fontSize: '1rem', color: '#92400E', marginBottom: '10px' }}>🌟 Oportunidades: {opportunities.length} propiedades encontradas por bots</h3>
+          <p style={{ fontSize: '0.85rem', color: '#B45309', marginBottom: '15px' }}>Si eres el dueño de alguna de estas propiedades, puedes reclamarla para gestionarla tú mismo.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {opportunities.map(o => (
+              <div key={o.id} style={{ background: 'white', padding: '12px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                <div>
+                  <strong style={{ fontSize: '0.95rem' }}>{o.title}</strong>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{o.city} • ${o.price.toLocaleString()}</div>
+                </div>
+                <button 
+                  className="btn-yerba" 
+                  style={{ padding: '6px 14px', fontSize: '0.8rem', background: 'var(--accent-earth)' }}
+                  onClick={() => handleClaim(o.id)}
+                >
+                  Reclamar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {step === "list" ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {listings.length === 0 ? (

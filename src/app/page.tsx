@@ -17,6 +17,8 @@ type Listing = {
   city: string;
   has_garage: boolean;
   status: string;
+  is_bot_generated?: boolean;
+  bot_contact_info?: string;
   images?: { image_url: string; label: string }[];
 };
 
@@ -206,9 +208,17 @@ export default function Home() {
     setView("choice");
   };
 
-  const handleInterest = async (listingId: string) => {
+  const handleInterest = async (listing: Listing) => {
     if (!user) {
       setShowAuth(true);
+      return;
+    }
+
+    if (listing.is_bot_generated) {
+      setNotif({ 
+        open: true, 
+        msg: `Esta oferta fue obtenida mediante bots. Puedes contactar directamente al propietario en: ${listing.bot_contact_info || 'Instagram @precio.app (soporte)'}` 
+      });
       return;
     }
 
@@ -217,7 +227,7 @@ export default function Home() {
         .from("interests")
         .insert({
           tenant_id: user.id,
-          listing_id: listingId,
+          listing_id: listing.id,
           status: 'pending'
         });
 
@@ -303,15 +313,15 @@ export default function Home() {
               />
             </div>
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>CIUDAD</label>
-              <select className="input-home" value={city} onChange={(e) => setCity(e.target.value)}>
+              <label htmlFor="city-select" style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>CIUDAD</label>
+              <select id="city-select" className="input-home" value={city} onChange={(e) => setCity(e.target.value)}>
                  <option value="Corrientes">Corrientes Capital</option>
                  <option value="Paso de los Libres">Paso de los Libres</option>
               </select>
             </div>
             <div style={{ display: 'flex', gap: '10px', paddingBottom: '14px' }}>
-              <input type="checkbox" checked={hasGarage} onChange={e => setHasGarage(e.target.checked)} />
-              <label>Cochera</label>
+              <input id="garage-checkbox" type="checkbox" checked={hasGarage} onChange={e => setHasGarage(e.target.checked)} />
+              <label htmlFor="garage-checkbox">Cochera</label>
             </div>
             <button className="btn-yerba" onClick={handleSearch} style={{ height: '52px' }}>Buscar</button>
           </div>
@@ -335,7 +345,12 @@ export default function Home() {
                const frontImage = l.images?.find(img => img.label.includes("Frente"))?.image_url;
                return (
                  <div key={l.id} className="card-home animate-slide-up">
-                   <div style={{ height: '220px', background: '#E2E8CE', borderRadius: '16px', marginBottom: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <div style={{ height: '220px', background: '#E2E8CE', borderRadius: '16px', marginBottom: '16px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                     {l.is_bot_generated && (
+                       <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '0.65rem', fontWeight: 'bold', zIndex: 2 }}>
+                         🤖 Obtenida con bots
+                       </div>
+                     )}
                      {frontImage ? (
                        <img src={frontImage} alt={l.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                      ) : (
@@ -345,7 +360,7 @@ export default function Home() {
                    <h3>{l.title}</h3>
                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
                       <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--accent-earth)' }}>${l.price.toLocaleString()}</span>
-                      <button className="btn-yerba" onClick={() => handleInterest(l.id)}>Me interesa</button>
+                      <button className="btn-yerba" onClick={() => handleInterest(l)}>Me interesa</button>
                    </div>
                  </div>
                );
