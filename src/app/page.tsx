@@ -215,7 +215,7 @@ export default function Home() {
     if (listing.is_bot_generated) {
       setNotif({ 
         open: true, 
-        msg: `Esta oferta fue obtenida mediante bots. Puedes contactar directamente al propietario en: ${listing.bot_contact_info || 'Instagram @precio.app (soporte)'}` 
+        msg: `Esta oferta fue obtenida mediante bots. Puedes ver la publicación original aquí: ${listing.bot_source_url || listing.bot_contact_info || 'Instagram @precio.app'}` 
       });
       return;
     }

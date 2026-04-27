@@ -2,6 +2,7 @@
 
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS is_bot_generated BOOLEAN DEFAULT FALSE;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS bot_contact_info TEXT;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS bot_source_url TEXT;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMP WITH TIME ZONE;
 
 -- Asegurar que RLS permita a los usuarios actualizar su propio presupuesto
